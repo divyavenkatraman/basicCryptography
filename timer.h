@@ -1,5 +1,24 @@
 // check https://www.intel.com/content/dam/www/public/us/en/documents/white-papers/ia-32-ia-64-benchmark-code-execution-paper.pdf
 // for detialed usage
+
+#include <stdint.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdbool.h>
+
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
+#include <openssl/rsa.h>
+#include <openssl/evp.h>
+#include <openssl/bio.h>
+#include <openssl/err.h>
+#include <openssl/aes.h>
+
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 static __inline__ uint64_t timer_start(void)
 {
   unsigned cycles_low, cycles_high;
