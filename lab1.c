@@ -29,11 +29,11 @@ void exportDataToFile(int data[]){
 	
 }
 void findMean(int data[]){
-	int sum = 0;
+	double sum = 0;
 	for (int i = 0; i<NUMTRIALS; i++){
-		sum+= data[i];
+		sum+= data[i]/1000.00;
 	}
-	int mean = sum/NUMTRIALS;
+	int mean = sum/(1000);
 	printf("Average time: %d \n", mean); 
 }
 FILE *fp;
@@ -108,6 +108,7 @@ int timeRSA(){
 				padding);
 		int end = timer_stop();
 		times[i] = end-start;
+		//printf("%d ", times[i]);
 	}
 	findMean(times);
 	writeToFile(times, "rsa.txt");
