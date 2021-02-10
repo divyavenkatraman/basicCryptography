@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
-
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
 #include <openssl/rsa.h>
@@ -21,39 +20,151 @@
 #include <string.h>
 #define PORT 12000
 
-struct sockaddr_in server;
+RSA *createRSA(unsigned char *key, int public){
+	RSA *rsa = NULL;
+  	BIO *keybio;
+  	keybio = BIO_new_mem_buf(key, -1);
+  	if (keybio == NULL){
+		printf("Failed to create key BIO");
+    		return 0;
+  	}
+  	if (public) rsa = PEM_read_bio_RSA_PUBKEY(
+					keybio, 
+					&rsa, 
+					NULL, 
+					NULL);
+  	else rsa = PEM_read_bio_RSAPrivateKey(
+					keybio, 
+					&rsa, 
+					NULL, 
+					NULL);
+  	if (rsa == NULL)printf("Failed to create RSA");
+  	return rsa;
+}
 
+static bool ReadBytes(const int sk, 
+			char *buf, 
+			const size_t n){
+	
+}
+
+static bool WriteBytes(const int sk, 
+			const char *buf, 
+			const size_t n){
+  	char *ptr = buf;
+  	while (ptr < buf + n){
+    		int ret = send(sk, 
+				ptr, 
+				n - (ptr - buf), 
+				0);
+    		if (ret <= 0) return false;
+    		ptr += ret;
+  	}	
+  	return true;
+}
 int main(int argc , char *argv[]){
-	int valread;
-	int socket_desc;
-	socket_desc = socket(AF_INET,SOCK_STREAM,0);
-	if (socket_desc == -1){
+	
+	struct sockaddr_in addr;
+	int sk;
+	//create socket
+	sk = socket(AF_INET,SOCK_STREAM,0);
+	if (sk == -1){
 		printf("Could not create socket");
 		return -1;
 	}
-	char *hello = "Hello from client";
-	char buffer[1024] = {0};
-	server.sin_addr.s_addr = INADDR_ANY;
-	server.sin_family = AF_INET;
-	server.sin_port = htons(PORT);
-	   
-    	if(inet_pton(AF_INET, 
+	//set to local IP
+	if(inet_pton(AF_INET, 
 			"127.0.0.1", 
-			&server.sin_addr)<=0){
+			&addr.sin_addr)<=0){ 
         	printf("\nInvalid address\n"); 
         	return -1; 
     	} 
-   
-    	if (connect(socket_desc,
-			(struct sockaddr*)&server, 
-			sizeof(server)) < 0) { 
-        	printf("\nConnection Failed \n"); 
-        	return -1; 
-    	} 
-    	send(socket_desc,hello,strlen(hello),0 ); 
-    	printf("Hello message sent\n"); 
-    	valread = read(socket_desc,buffer,1024); 
-    	printf("%s\n",buffer );   
+	//set TCP mode
+	addr.sin_family = AF_INET;
+	//set port #
+	addr.sin_port = htons(PORT);
+	
+	//attempt connection
+    	if (connect(sk,
+		(struct sockaddr*)(&addr),	
+		sizeof(addr)) < 0) { 
+        		printf("\nConnection Failed \n"); 
+        		return -1; 
+    	}
+	else printf("Connected! \n");
+
+	//Recieve Public key size
+	int32_t pKeyLen;
+	char* data = (char*)&pKeyLen;
+	if (recv(sk, data, 32, 0) < 0) printf("Reception failed \n");
+	printf("%i \n", pKeyLen);
+	
+	//receive public key
+	char pKey[2000];
+	if (recv(sk, pKey, 2000, 0) < 0) printf("Reception failed \n");
+	else{
+		for(int i = 0; i<451; i++){
+			printf("%c", pKey[i]);
+		}
+	}
+	
+		
+
+  	//char buf[8192];
+	int32_t AESkeyLen = 16;
+	unsigned char AESkey[16] = {'b', '1', 'c', 
+				's', 'f', 'g', 
+				'f', 'f', 'g', 
+				'h', '3', '5', 
+				'5', '5', '4', 'f'};
+	int length = 8192;
+	char en[length];
+	unsigned char* toEncrypt = (char*)&AESkeyLen;
+	unsigned char* encrypted = en;
+	/*AES_KEY *expanded;
+	expanded = (AES_KEY *)malloc(sizeof(AES_KEY));
+	AES_set_encrypt_key(key, 128, expanded);
+	printf("Running RSA encryption \n");
+	*/
+
+	//encrypt our AES key's length using server's public key
+	
+	RSA *rsa = createRSA(pKey, 1);
+	int padding = RSA_PKCS1_PADDING;
+	RSA_public_encrypt(16,
+			toEncrypt,
+			encrypted, 
+		  	rsa,
+			padding);
+	//send encrypted AES key length
+	if (send(sk, &length, sizeof(length), 0) < 0){
+		printf("Failed to send encrypt key length \n");
+	}
+	
+	//encrypt our AES key using server's public key
+	memset(en, 0, length);
+	toEncrypt = (char*)&AESkeyLen;
+	
+	RSA_public_encrypt(16,
+			toEncrypt,
+			encrypted, 
+		  	rsa,
+			padding);
+	//send encrupted AES key
+	if (send(sk, encrypted, length, 0) < 0){
+		printf("Failed to send encrypted key \n");
+	}
+	//recieved AES encrypted secret message
+	//decrypt secret message
+	char de[8192];
+	unsigned char* toDecrypt;
+	unsigned char* decrypted = de;	
+	AES_KEY *expanded;
+	expanded = (AES_KEY *)malloc(sizeof(AES_KEY));
+	AES_set_decrypt_key(key, 128, expanded);
+	AES_decrypt(toDecrypt, decrypted, expanded);
+	
+	
 	return 0;
 
 }

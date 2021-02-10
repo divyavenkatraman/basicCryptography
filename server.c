@@ -247,7 +247,10 @@ static void OnClient(const int sk)
 
   WriteBytes(sk, &publicKeySize, sizeof(publicKeySize));
 
+	printf("Public key size: %d \n", publicKeySize);
+
   WriteBytes(sk, publicKey, publicKeySize);
+	/*
 
   if (!ReadBytes(sk, &messageSize, sizeof(messageSize)))
   {
@@ -285,6 +288,7 @@ static void OnClient(const int sk)
   WriteBytes(sk, buf, 16);
 
   free(expanded);
+ */
 }
 
 /**
