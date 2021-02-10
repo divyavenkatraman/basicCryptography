@@ -21,8 +21,10 @@ unsigned int secret[16] = {
     0x04, 0x05, 0x06, 0x07,
     0x08, 0x09, 0x0a, 0x0b,
     0x0c, 0x0d, 0x0e, 0x0f};
-unsigned char* toEncrypt = (char*)(&secret);
-unsigned char* encrypted;
+char arr[16] = {'a','b','c','d','e','f','g','h','i','a','a','a','a','a','a','a'};
+char en[8192];
+unsigned char* toEncrypt = arr;
+unsigned char* encrypted = en;
 
 
 void exportDataToFile(int data[]){
@@ -34,16 +36,23 @@ void findMean(int data[]){
 		sum+= data[i];
 	}
 	int mean = sum/NUMTRIALS;
-	printf("Average time: %d", mean); 
+	printf("Average time: %d \n", mean); 
 }
 int timeAES(){
 	int times[NUMTRIALS];
+	int size = 8192;
+  	char buf[size];
+	unsigned char key[16];
+	AES_KEY *expanded;
+	expanded = (AES_KEY *)malloc(sizeof(AES_KEY));
+	AES_set_encrypt_key(key, 128, expanded);
 	for (int i = 0; i<NUMTRIALS; i++){
 		int start = clock();
-		//AES_encrypt();
+		AES_encrypt(arr, buf, expanded);
 		int end = clock();
-		times[i] = start - end;		
+		times[i] = start - end;
 	}
+	findMean(times);
 }
 char publicKey[] = "-----BEGIN PUBLIC KEY-----\n"
 "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAroyB+A4W/acwRq9gthl0\n"
@@ -89,11 +98,12 @@ int timeRSA(){
 				rsa,
 				padding);
 		int end = clock();
-		times[i] = start - end;
+		times[i] = end-start;
 	}
 	findMean(times);
 }
 int main(int argc, char*argv[])
 {
-	timeRSA();
+	//timeRSA();
+	timeAES();
 }
