@@ -143,7 +143,7 @@ int main(int argc , char *argv[]){
 	
 	//encrypt our AES key using server's public key
 	memset(en, 0, length);
-	toEncrypt = (char*)&AESkeyLen;
+	toEncrypt = AESkey;
 	
 	RSA_public_encrypt(16,
 			toEncrypt,
@@ -161,7 +161,7 @@ int main(int argc , char *argv[]){
 	unsigned char* decrypted = de;	
 	AES_KEY *expanded;
 	expanded = (AES_KEY *)malloc(sizeof(AES_KEY));
-	AES_set_decrypt_key(key, 128, expanded);
+	AES_set_decrypt_key(AESkey, 128, expanded);
 	AES_decrypt(toDecrypt, decrypted, expanded);
 	
 	

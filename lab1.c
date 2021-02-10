@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
-
+#include <stdlib.h>
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
 #include <openssl/rsa.h>
@@ -36,6 +36,14 @@ void findMean(int data[]){
 	int mean = sum/NUMTRIALS;
 	printf("Average time: %d \n", mean); 
 }
+FILE *fp;
+void writeToFile(int data[], char fName[]){
+	fp = fopen(fName, "w");
+	for (int i = 0; i < NUMTRIALS; i++){
+		fprintf(fp, "%d \n", data[i]);
+	}
+	fclose(fp);
+}
 int timeAES(){
 	int times[NUMTRIALS];
 	int size = 8192;
@@ -52,6 +60,7 @@ int timeAES(){
 		times[i] = end - start;
 	}
 	findMean(times);
+	writeToFile(times, "aes.txt");
 }
 char publicKey[] = "-----BEGIN PUBLIC KEY-----\n"
 "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAroyB+A4W/acwRq9gthl0\n"
@@ -101,6 +110,7 @@ int timeRSA(){
 		times[i] = end-start;
 	}
 	findMean(times);
+	writeToFile(times, "rsa.txt");
 }
 int main(int argc, char*argv[])
 {
