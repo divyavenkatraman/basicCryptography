@@ -1,4 +1,4 @@
-#include <time.h>
+#include "timer.c"
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
@@ -13,8 +13,6 @@
 #include <openssl/err.h>
 #include <openssl/aes.h>
 #define NUMTRIALS 1000000
-
-
 
 unsigned int secret[16] = {
     0x00, 0x01, 0x02, 0x03,
@@ -46,11 +44,12 @@ int timeAES(){
 	AES_KEY *expanded;
 	expanded = (AES_KEY *)malloc(sizeof(AES_KEY));
 	AES_set_encrypt_key(key, 128, expanded);
+	printf("Running AES encryption \n");
 	for (int i = 0; i<NUMTRIALS; i++){
-		int start = clock();
+		int start = timer_start();
 		AES_encrypt(arr, buf, expanded);
-		int end = clock();
-		times[i] = start - end;
+		int end = timer_stop();
+		times[i] = end - start;
 	}
 	findMean(times);
 }
@@ -89,21 +88,22 @@ int timeRSA(){
 	int times[NUMTRIALS];
 	RSA *rsa = createRSA(publicKey, 1);
 	int padding = RSA_PKCS1_PADDING;
+	printf("Running RSA encryption \n");
 	for (int i = 0; i<NUMTRIALS; i++){
-		int start = clock();
+		int start = timer_start();
 		RSA_public_encrypt(
 				16,
 				toEncrypt,
 				encrypted, 
 				rsa,
 				padding);
-		int end = clock();
+		int end = timer_stop();
 		times[i] = end-start;
 	}
 	findMean(times);
 }
 int main(int argc, char*argv[])
 {
-	//timeRSA();
+	timeRSA();
 	timeAES();
 }
