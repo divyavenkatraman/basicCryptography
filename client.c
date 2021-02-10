@@ -96,21 +96,20 @@ int main(int argc , char *argv[]){
 	//Recieve Public key size
 	int32_t pKeyLen;
 	char* data = (char*)&pKeyLen;
-	if (recv(sk, data, 32, 0) < 0) printf("Reception failed \n");
+	if (read(sk, data, 32) < 0) printf("Reception failed \n");
 	printf("%i \n", pKeyLen);
 	
 	//receive public key
-	char pKey[2000];
-	if (recv(sk, pKey, 2000, 0) < 0) printf("Reception failed \n");
+	char pKey[pKeyLen] = {0};
+	data = pKey;
+	if (read(sk, data, pKeyLen) < 0) printf("Reception failed \n");
 	else{
-		for(int i = 0; i<451; i++){
+		for(int i = 0; i<pKeyLen; i++){
 			printf("%c", pKey[i]);
 		}
 	}
 	
 		
-
-  	//char buf[8192];
 	int32_t AESkeyLen = 16;
 	unsigned char AESkey[16] = {'b', '1', 'c', 
 				's', 'f', 'g', 
@@ -121,14 +120,8 @@ int main(int argc , char *argv[]){
 	char en[length];
 	unsigned char* toEncrypt = (char*)&AESkeyLen;
 	unsigned char* encrypted = en;
-	/*AES_KEY *expanded;
-	expanded = (AES_KEY *)malloc(sizeof(AES_KEY));
-	AES_set_encrypt_key(key, 128, expanded);
-	printf("Running RSA encryption \n");
-	*/
 
 	//encrypt our AES key's length using server's public key
-	
 	RSA *rsa = createRSA(pKey, 1);
 	int padding = RSA_PKCS1_PADDING;
 	RSA_public_encrypt(16,
@@ -150,10 +143,12 @@ int main(int argc , char *argv[]){
 			encrypted, 
 		  	rsa,
 			padding);
+
 	//send encrupted AES key
 	if (send(sk, encrypted, length, 0) < 0){
 		printf("Failed to send encrypted key \n");
 	}
+
 	//recieved AES encrypted secret message
 	//decrypt secret message
 	char de[8192];
