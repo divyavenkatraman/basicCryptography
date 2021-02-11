@@ -42,26 +42,7 @@ RSA *createRSA(unsigned char *key, int public){
   	return rsa;
 }
 
-static bool ReadBytes(const int sk, 
-			char *buf, 
-			const size_t n){
-	
-}
 
-static bool WriteBytes(const int sk, 
-			const char *buf, 
-			const size_t n){
-  	char *ptr = buf;
-  	while (ptr < buf + n){
-    		int ret = send(sk, 
-				ptr, 
-				n - (ptr - buf), 
-				0);
-    		if (ret <= 0) return false;
-    		ptr += ret;
-  	}	
-  	return true;
-}
 int main(int argc , char *argv[]){
 	
 	struct sockaddr_in addr;
@@ -111,20 +92,23 @@ int main(int argc , char *argv[]){
 	
 		
 	int32_t AESkeyLen = 16;
-	unsigned char AESkey[16] = {'b', '1', 'c', 
-				's', 'f', 'g', 
-				'f', 'f', 'g', 
-				'h', '3', '5', 
-				'5', '5', '4', 'f'};
-	int length = 8192;
-	char en[length];
+	//unsigned char AESkey[16] = {'b', '1', 'c', 
+	//			's', 'f', 'g', 
+	//			'f', 'f', 'g', 
+	//			'h', '3', '5', 
+	//			'5', '5', '4', 'f'};
+	unsigned char AESkey[16] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+				0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13,
+				0x14, 0x15, 0x16};
+
+	char en[8192];
 	unsigned char* toEncrypt = AESkey;
 	unsigned char* encrypted = en;
 
 	//encrypt our AES key using server's public key
 	RSA *rsa = createRSA(pKey, 1);
 	int padding = RSA_PKCS1_PADDING;
-	RSA_public_encrypt(16,
+	int length = RSA_public_encrypt(16,
 			toEncrypt,
 			encrypted, 
 		  	rsa,
@@ -143,26 +127,34 @@ int main(int argc , char *argv[]){
 	}
 	
 
-/*
+
 	//recieved AES encrypted secret message
- 	char buf[8192];	
+	int n = 16;
+ 	char buf[n];	
 	data = buf;
-	if (read(sk, data, 8192) < 0) printf("Reception failed \n");
-
-
+	if (read(sk, data, n) < 0) printf("Reception failed \n");
+	printf("Encrypted sercret message I get \n");
+	for (int i = 0; i<n; i++){
+		printf("%02x", buf[i]);
+	}
 	//decrypt secret message
-	char de[8192];
+	char de[n];
 	unsigned char* toDecrypt = buf;
 	unsigned char* decrypted = de;	
 	AES_KEY *expanded;
 	expanded = (AES_KEY *)malloc(sizeof(AES_KEY));
 	AES_set_decrypt_key(AESkey, 128, expanded);
 	AES_decrypt(toDecrypt, decrypted, expanded);
-	for (int i = 0; i<8192; i++){
-		printf("%c", de[i]);
+	printf("Decrypted secrete message \n");
+	for (int i = 0; i<n; i++){
+		printf("%02x \n", de[i]);
 	}
 	
-*/	
+	//Translate from ASCII to char
+	for (int i = 0; i<n; i++){
+		
+	}	
+		
 	return 0;
 
 }

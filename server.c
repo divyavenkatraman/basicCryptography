@@ -279,26 +279,28 @@ static void OnClient(const int sk)
   //decrypt RSA encrypted AES key 
   private_decrypt(buf, messageSize, privateKey, key);
   printf("result: %i\n", i);
-  //RESULT IS NEGATIVE 1. KEY NOT DECRYPTING PROPERLY....
-
-  printf("This is the descrypted AES key: \n");
+ 
+  printf("This is the decrypted AES key: \n");
   for (i = 0; i < 16; i++)
-    printf("%02x ", key[i]);
+    printf("%02x", key[i]);
   printf("\n");
 
-/*
+
 
   expanded = (AES_KEY *)malloc(sizeof(AES_KEY));
 
   AES_set_encrypt_key(key, 128, expanded);
-
+  printf("\n This is the secret I am sending: \n");
+  for (int i = 0; i<(sizeof(secret)/sizeof(secret[0])); i++)
+		printf("%02x", secret[i]);
+  printf("\n");
   AES_encrypt(secret, buf, expanded);
- // printf("Encrypted secrete message: %s \n", buf);
+  printf("Encrypted secrete message: %s \n", buf);
 
   WriteBytes(sk, buf, 16);
 
   free(expanded);
-*/
+
  
 }
 
