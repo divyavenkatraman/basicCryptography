@@ -118,10 +118,10 @@ int main(int argc , char *argv[]){
 				'5', '5', '4', 'f'};
 	int length = 8192;
 	char en[length];
-	unsigned char* toEncrypt = (char*)&AESkeyLen;
+	unsigned char* toEncrypt = AESkey;
 	unsigned char* encrypted = en;
 
-	//encrypt our AES key's length using server's public key
+	//encrypt our AES key using server's public key
 	RSA *rsa = createRSA(pKey, 1);
 	int padding = RSA_PKCS1_PADDING;
 	RSA_public_encrypt(16,
@@ -129,37 +129,40 @@ int main(int argc , char *argv[]){
 			encrypted, 
 		  	rsa,
 			padding);
-	//send encrypted AES key length
+	
+
+	//send length of encrypted AES key 
 	if (send(sk, &length, sizeof(length), 0) < 0){
 		printf("Failed to send encrypt key length \n");
 	}
-	
-	//encrypt our AES key using server's public key
-	memset(en, 0, length);
-	toEncrypt = AESkey;
-	
-	RSA_public_encrypt(16,
-			toEncrypt,
-			encrypted, 
-		  	rsa,
-			padding);
+
 
 	//send encrupted AES key
 	if (send(sk, encrypted, length, 0) < 0){
 		printf("Failed to send encrypted key \n");
 	}
+	
 
+/*
 	//recieved AES encrypted secret message
+ 	char buf[8192];	
+	data = buf;
+	if (read(sk, data, 8192) < 0) printf("Reception failed \n");
+
+
 	//decrypt secret message
 	char de[8192];
-	unsigned char* toDecrypt;
+	unsigned char* toDecrypt = buf;
 	unsigned char* decrypted = de;	
 	AES_KEY *expanded;
 	expanded = (AES_KEY *)malloc(sizeof(AES_KEY));
 	AES_set_decrypt_key(AESkey, 128, expanded);
 	AES_decrypt(toDecrypt, decrypted, expanded);
+	for (int i = 0; i<8192; i++){
+		printf("%c", de[i]);
+	}
 	
-	
+*/	
 	return 0;
 
 }

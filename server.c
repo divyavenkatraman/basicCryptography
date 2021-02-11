@@ -241,54 +241,65 @@ static void OnClient(const int sk)
   char buf[size];
   int messageSize;
 
+
   int publicKeySize = strlen(publicKey);
 
   printf("sending public keys\n");
-
+  //sending public key size
   WriteBytes(sk, &publicKeySize, sizeof(publicKeySize));
 
 	printf("Public key size: %d \n", publicKeySize);
-
+  //sending public key
   WriteBytes(sk, publicKey, publicKeySize);
-	/*
 
+	printf("Public key: %s \n", publicKey);
+  
+  //getting size of RSA encrypted AES key 
   if (!ReadBytes(sk, &messageSize, sizeof(messageSize)))
   {
     printf("unable to read response message size\n");
     return;
   }
-
   printf("message size: %i\n", messageSize);
-
+  //getting RSA encrypted AES key
   if (!ReadBytes(sk, buf, messageSize))
   {
     printf("unable to read encrypted AES key\n");
     return;
   }
+   printf("Read encrypted AES key %s\ n", buf);
+
 
   unsigned char key[16];
   int i;
-  for (i = 0; i < 16; i++)
+/*  for (i = 0; i < 16; i++)
     printf("%02x ", key[i]);
   printf("\n");
-
-  i = private_decrypt(buf, messageSize, privateKey, key);
+*/
+  //decrypt RSA encrypted AES key 
+  private_decrypt(buf, messageSize, privateKey, key);
   printf("result: %i\n", i);
+  //RESULT IS NEGATIVE 1. KEY NOT DECRYPTING PROPERLY....
 
+  printf("This is the descrypted AES key: \n");
   for (i = 0; i < 16; i++)
     printf("%02x ", key[i]);
   printf("\n");
+
+/*
 
   expanded = (AES_KEY *)malloc(sizeof(AES_KEY));
 
   AES_set_encrypt_key(key, 128, expanded);
 
   AES_encrypt(secret, buf, expanded);
+ // printf("Encrypted secrete message: %s \n", buf);
 
   WriteBytes(sk, buf, 16);
 
   free(expanded);
- */
+*/
+ 
 }
 
 /**
