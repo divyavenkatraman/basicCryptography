@@ -96,11 +96,11 @@ int main(int argc , char *argv[]){
 	//Recieve Public key size
 	int32_t pKeyLen;
 	char* data = (char*)&pKeyLen;
-	if (read(sk, data, 32) < 0) printf("Reception failed \n");
+	if (read(sk, data, 4) < 0) printf("Reception failed \n");
 	printf("%i \n", pKeyLen);
 	
 	//receive public key
-	char pKey[pKeyLen] = {0};
+	char pKey[pKeyLen];
 	data = pKey;
 	if (read(sk, data, pKeyLen) < 0) printf("Reception failed \n");
 	else{
