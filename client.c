@@ -10,16 +10,33 @@
 #include <openssl/bio.h>
 #include <openssl/err.h>
 #include <openssl/aes.h>
-
+#include<errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
- 
+#include <netdb.h> 
 #include <arpa/inet.h>  
 #include <string.h>
 #define PORT 12000
+#define HOST "hardware-security.nueess.tk"
+#define LOCALIP "127.0.0.1"
+int hostname_to_ip(char* host, char* ip){
+	struct hostent *he;
+	struct in_addr **addr_list;
+	int i;
 
+	if ((he = gethostbyname(host))==NULL){
+		herror("gethostbyname");
+		return 1;
+	}
+	addr_list = (struct in_addr **) he->h_addr_list;
+	for (i = 0; addr_list[i] != NULL; i++){
+		strcpy(ip, inet_ntoa(*addr_list[i]));
+		return 0;
+	}
+	return 1;
+}
 RSA *createRSA(unsigned char *key, int public){
 	RSA *rsa = NULL;
   	BIO *keybio;
@@ -45,6 +62,13 @@ RSA *createRSA(unsigned char *key, int public){
 
 int main(int argc , char *argv[]){
 	
+	char* hostname = HOST;
+	char ip[100];
+	
+	hostname_to_ip(hostname, ip);
+	printf("%s resolved to %s", hostname, ip);
+	printf("\n");	
+	
 	struct sockaddr_in addr;
 	int sk;
 	//create socket
@@ -55,7 +79,7 @@ int main(int argc , char *argv[]){
 	}
 	//set to local IP
 	if(inet_pton(AF_INET, 
-			"127.0.0.1", 
+			ip, 
 			&addr.sin_addr)<=0){ 
         	printf("\nInvalid address\n"); 
         	return -1; 
@@ -133,10 +157,12 @@ int main(int argc , char *argv[]){
  	char buf[n];	
 	data = buf;
 	if (read(sk, data, n) < 0) printf("Reception failed \n");
-	printf("Encrypted sercret message I get \n");
+	//printf("Encrypted secret message I get \n");
+	/*
 	for (int i = 0; i<n; i++){
 		printf("%02x", buf[i]);
 	}
+	*/
 	//decrypt secret message
 	char de[n];
 	unsigned char* toDecrypt = buf;
@@ -145,16 +171,23 @@ int main(int argc , char *argv[]){
 	expanded = (AES_KEY *)malloc(sizeof(AES_KEY));
 	AES_set_decrypt_key(AESkey, 128, expanded);
 	AES_decrypt(toDecrypt, decrypted, expanded);
-	printf("Decrypted secrete message \n");
-	for (int i = 0; i<n; i++){
-		printf("%02x \n", de[i]);
-	}
+	printf("Decrypted secret message \n");
 	
-	//Translate from ASCII to char
+	char bytes[n+1];
+	bytes[n] = 0;
 	for (int i = 0; i<n; i++){
-		
-	}	
-		
+		printf("%02x  ", de[i]);
+		int ascii = (int)(de[i]);
+		bytes[i] = ascii;
+		printf("%i \n", bytes[i]);
+	}
+	printf("The string %s \n", bytes);		
+	
+	FILE* fp;
+	fp = fopen("secret.txt", "w");
+	fprintf(fp, "%s \n", bytes);
+	fclose(fp);
+	
 	return 0;
 
 }
